@@ -7,10 +7,11 @@ use App\Enums\CourseDuration;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Course extends Model
 {
-    use HasFactory;
+
     use SoftDeletes;
 
     protected $fillable = [
@@ -19,6 +20,7 @@ class Course extends Model
         'description',
         'duration',
         'validity_period',
+        'course_category_id',
     ];
 
     protected function casts(): array
@@ -29,4 +31,10 @@ class Course extends Model
             'accrediting_body' => CourseAccreditingBody::class,
         ];
     }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(CourseCategory::class, 'course_category_id');
+    }
 }
+

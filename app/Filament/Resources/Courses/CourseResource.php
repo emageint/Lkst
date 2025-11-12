@@ -38,14 +38,18 @@ class CourseResource extends Resource
                     ->required()
                     ->maxLength(255),
 
+                Select::make('course_category_id')
+                    ->label('Category')
+                    ->relationship('category', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->required(),
+
                 Select::make('accrediting_body')
                     ->label('Accrediting body')
                     ->options(CourseAccreditingBody::options())
                     ->required(),
-
-                Textarea::make('description')
-                    ->label('Course description (short summary)')
-                    ->rows(4),
+                
                 Select::make('duration')
                     ->label('Duration')
                     ->options(CourseDuration::options())
@@ -56,6 +60,9 @@ class CourseResource extends Resource
                     ->numeric()
                     ->minValue(0)
                     ->required(),
+                Textarea::make('description')
+                    ->label('Course description (short summary)')
+                    ->rows(4),
             ]);
     }
 
@@ -64,6 +71,7 @@ class CourseResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')->label('Course name')->sortable()->searchable(),
+                TextColumn::make('category.name')->label('Category')->sortable()->toggleable(),
                 TextColumn::make('duration')
                     ->label('Course Duration')
                     ->formatStateUsing(function ($state) {
@@ -89,3 +97,4 @@ class CourseResource extends Resource
         ];
     }
 }
+

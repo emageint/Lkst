@@ -53,15 +53,16 @@ class LearnerResource extends Resource
                         ->label('First Name')
                         ->required(),
 
-                    TextInput::make('last_name')
-                        ->label('Last Name')
-                        ->required(),
-
                     TextInput::make('password')
                         ->label('Password')
                         ->password()
                         ->required(fn(string $operation): bool => $operation === 'create')
-                        ->dehydrated(fn(?string $state): bool => filled($state))
+                        ->dehydrated(fn(?string $state): bool => filled($state)),
+                    
+                    TextInput::make('last_name')
+                        ->label('Last Name')
+                        ->required(),
+
                 ]),
 
             Section::make('Contact')
