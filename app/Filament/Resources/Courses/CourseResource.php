@@ -49,7 +49,7 @@ class CourseResource extends Resource
                     ->label('Accrediting body')
                     ->options(CourseAccreditingBody::options())
                     ->required(),
-                
+
                 Select::make('duration')
                     ->label('Duration')
                     ->options(CourseDuration::options())
@@ -71,7 +71,7 @@ class CourseResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')->label('Course name')->sortable()->searchable(),
-                TextColumn::make('category.name')->label('Category')->sortable()->toggleable(),
+                TextColumn::make('category.name')->label('Category')->sortable(),
                 TextColumn::make('duration')
                     ->label('Course Duration')
                     ->formatStateUsing(function ($state) {

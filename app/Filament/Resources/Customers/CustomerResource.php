@@ -1,10 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\Tutors;
+namespace App\Filament\Resources\Customers;
 
-use App\Filament\Resources\Tutors\Pages\ManageTutors;
-use App\Models\Holiday;
-use App\Models\Tutor;
+use App\Filament\Resources\Customers\Pages\ManageCustomers;
 use App\Models\User;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -19,15 +17,15 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Validation\Rule;
 
-class TutorResource extends Resource
+class CustomerResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedAcademicCap;
-    protected static ?string $navigationLabel = 'Tutors';
-    protected static ?string $modelLabel = 'Tutors';
-    protected static ?string $recordTitleAttribute = 'Tutor';
-    protected static ?int $navigationSort = 20;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
+    protected static ?string $navigationLabel = 'Customers';
+    protected static ?string $modelLabel = 'Customers';
+    protected static ?string $recordTitleAttribute = 'Customer';
+    protected static ?int $navigationSort = 30;
 
     public static function form(Schema $schema): Schema
     {
@@ -50,19 +48,24 @@ class TutorResource extends Resource
                     ->dehydrated(fn(?string $state): bool => filled($state))
                     ->required(fn(string $operation): bool => $operation === 'create')
                     ->maxLength(255),
+                TextInput::make('phone')
+                    ->tel()
+                    ->maxLength(255),
                 TextInput::make('address_line1')
-                    ->required()
+                    ->label('Address Line 1')
                     ->maxLength(255),
                 TextInput::make('address_line2')
-                    ->maxLength(255),
-                TextInput::make('address_line3')
+                    ->label('Address Line 2')
                     ->maxLength(255),
                 TextInput::make('city')
-                    ->required()
                     ->maxLength(255),
                 TextInput::make('postcode')
-                    ->required()
                     ->maxLength(255),
+            
+                TextInput::make('company_name')
+                    ->label('Company Name')
+                    ->maxLength(255),
+
             ]);
     }
 
@@ -70,24 +73,28 @@ class TutorResource extends Resource
     {
         return $table
             ->query(User::query()->whereHas('roles', function ($query) {
-                $query->where('name', 'Tutor');
+                $query->where('name', 'Customer');
             }))
-            ->recordTitleAttribute('Tutor')
+            ->recordTitleAttribute('Customer')
             ->columns([
                 TextColumn::make('full_name')
                     ->label('Name')
-                    ->sortable([ 'first_name',
-                        'last_name' ])
+                    ->sortable([ 'first_name', 'last_name' ])
                     ->searchable([ 'first_name', 'last_name' ]),
-
                 TextColumn::make('email')
                     ->label('Email address')
                     ->searchable()
                     ->sortable(),
-             
+                TextColumn::make('phone')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('company_name')
+                    ->label('Company')
+                    ->searchable()
+                    ->sortable(),
             ])
             ->filters([
-                //
+                // Add filters here if needed
             ])
             ->recordActions([
                 EditAction::make()->iconButton(),
@@ -98,7 +105,7 @@ class TutorResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ManageTutors::route('/'),
+            'index' => ManageCustomers::route('/'),
         ];
     }
 }
