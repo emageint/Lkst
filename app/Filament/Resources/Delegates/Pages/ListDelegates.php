@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Filament\Resources\Learners\Pages;
+namespace App\Filament\Resources\Delegates\Pages;
 
-use App\Filament\Resources\Learners\LearnerResource;
+use App\Filament\Resources\Delegates\DelegateResource;
 use App\Models\User;
 use Filament\Actions\CreateAction;
-use Filament\Resources\Pages\ManageRecords;
+use Filament\Resources\Pages\ListRecords;
 
-class ManageLearners extends ManageRecords
+class ListDelegates extends ListRecords
 {
-    protected static string $resource = LearnerResource::class;
+    protected static string $resource = DelegateResource::class;
 
     protected function getHeaderActions(): array
     {

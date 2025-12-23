@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Filament\Resources\Learners\Pages;
+namespace App\Filament\Resources\Delegates\Pages;
 
-use App\Filament\Resources\Learners\LearnerResource;
+use App\Filament\Resources\Delegates\DelegateResource;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Resources\Pages\Enums\ContentTabPosition;
 use Filament\Schemas\Components\Tabs\Tab;
 
-class EditLearner extends EditRecord
+class EditDelegate extends EditRecord
 {
-    protected static string $resource = LearnerResource::class;
+    protected static string $resource = DelegateResource::class;
 
 //    public function hasCombinedRelationManagerTabsWithContent(): bool
 //    {

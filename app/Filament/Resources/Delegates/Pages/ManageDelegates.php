@@ -1,16 +1,15 @@
 <?php
 
-namespace App\Filament\Resources\Tutors\Pages;
+namespace App\Filament\Resources\Delegates\Pages;
 
-use App\Filament\Resources\Tutors\TutorResource;
-use App\Models\Holiday;
+use App\Filament\Resources\Delegates\DelegateResource;
 use App\Models\User;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ManageRecords;
 
-class ManageTutors extends ManageRecords
+class ManageDelegates extends ManageRecords
 {
-    protected static string $resource = TutorResource::class;
+    protected static string $resource = DelegateResource::class;
 
     protected function getHeaderActions(): array
     {
@@ -18,10 +17,8 @@ class ManageTutors extends ManageRecords
             CreateAction::make()
                 ->label('Add New')
                 ->after(function (User $record) {
-                    $record->assignRole('Tutor');
+                    $record->assignRole('Learner');
                 }),
         ];
     }
-
-
 }

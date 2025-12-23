@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Filament\Resources\Learners\Pages;
+namespace App\Filament\Resources\Delegates\Pages;
 
 use App\Enums\CourseStatus;
-use App\Filament\Resources\Learners\LearnerResource;
+use App\Filament\Resources\Delegates\DelegateResource;
 use App\Livewire\LearnerCoursesStats;
 use App\Models\Course;
 use BackedEnum;
@@ -23,9 +23,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Storage;
 
-class ManageLeanerCourses extends ManageRelatedRecords
+class ManageDelegateCourses extends ManageRelatedRecords
 {
-    protected static string $resource = LearnerResource::class;
+    protected static string $resource = DelegateResource::class;
 
     protected static string $relationship = 'courses';
 
@@ -130,7 +130,7 @@ class ManageLeanerCourses extends ManageRelatedRecords
                     ->schema([
                         Select::make('recordId')
                             ->label('Course')
-                            ->options(function (ManageLeanerCourses $livewire) {
+                            ->options(function (ManageDelegateCourses $livewire) {
                                 $learner = $livewire->getOwnerRecord();
 
                                 $attachedIds = $learner->courses()

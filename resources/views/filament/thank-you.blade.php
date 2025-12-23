@@ -1,0 +1,2 @@
+Booking already completed!
+

@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\Jobs\Tables;
+namespace App\Filament\Resources\Bookings\Tables;
 
+use App\Enums\CourseStatus;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -9,7 +10,7 @@ use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
-class JobsTable
+class BookingsTable
 
 {
     public static function configure(Table $table): Table
@@ -27,7 +28,7 @@ class JobsTable
                     ->sortable(),
 
                 TextColumn::make('tutor.full_name')
-                    ->label('Tutor')
+                    ->label('Instructor')
                     ->searchable([ 'first_name', 'last_name' ])
                     ->sortable(),
 
@@ -50,6 +51,9 @@ class JobsTable
                             ->orderBy('training_location_city', $direction)
                             ->orderBy('training_location_postcode', $direction);
                     }),
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->badge(),
             ])
             ->filters([
                 // Add filters here if needed

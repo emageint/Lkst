@@ -1,10 +1,9 @@
 <?php
 
-namespace App\Filament\Resources\Tutors;
+namespace App\Filament\Resources\Instructors;
 
-use App\Filament\Resources\Tutors\Pages\ManageTutors;
+use App\Filament\Resources\Instructors\Pages\ManageInstructors;
 use App\Models\Holiday;
-use App\Models\Tutor;
 use App\Models\User;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -19,14 +18,15 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Validation\Rule;
 
-class TutorResource extends Resource
+class InstructorResource extends Resource
 {
+
     protected static ?string $model = User::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedAcademicCap;
-    protected static ?string $navigationLabel = 'Tutors';
-    protected static ?string $modelLabel = 'Tutors';
-    protected static ?string $recordTitleAttribute = 'Tutor';
+    protected static ?string $navigationLabel = 'Instructors';
+    protected static ?string $modelLabel = 'Instructors';
+    protected static ?string $recordTitleAttribute = 'Instructor';
     protected static ?int $navigationSort = 20;
 
     public static function form(Schema $schema): Schema
@@ -50,19 +50,6 @@ class TutorResource extends Resource
                     ->dehydrated(fn(?string $state): bool => filled($state))
                     ->required(fn(string $operation): bool => $operation === 'create')
                     ->maxLength(255),
-                TextInput::make('address_line1')
-                    ->required()
-                    ->maxLength(255),
-                TextInput::make('address_line2')
-                    ->maxLength(255),
-                TextInput::make('address_line3')
-                    ->maxLength(255),
-                TextInput::make('city')
-                    ->required()
-                    ->maxLength(255),
-                TextInput::make('postcode')
-                    ->required()
-                    ->maxLength(255),
             ]);
     }
 
@@ -70,9 +57,8 @@ class TutorResource extends Resource
     {
         return $table
             ->query(User::query()->whereHas('roles', function ($query) {
-                $query->where('name', 'Tutor');
+                $query->where('name', 'Instructor');
             }))
-            ->recordTitleAttribute('Tutor')
             ->columns([
                 TextColumn::make('full_name')
                     ->label('Name')
@@ -84,7 +70,6 @@ class TutorResource extends Resource
                     ->label('Email address')
                     ->searchable()
                     ->sortable(),
-             
             ])
             ->filters([
                 //
@@ -95,10 +80,17 @@ class TutorResource extends Resource
             ]);
     }
 
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
     public static function getPages(): array
     {
         return [
-            'index' => ManageTutors::route('/'),
+            'index' => ManageInstructors::route('/'),
         ];
     }
 }

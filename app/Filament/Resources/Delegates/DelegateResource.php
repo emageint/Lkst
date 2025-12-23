@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Filament\Resources\Learners;
+namespace App\Filament\Resources\Delegates;
 
-use App\Filament\Resources\Learners\Pages\CreateLearner;
-use App\Filament\Resources\Learners\Pages\EditLearner;
-use App\Filament\Resources\Learners\Pages\ListLearners;
-use App\Filament\Resources\Learners\RelationManagers\CoursesRelationManager;
+use App\Filament\Resources\Delegates\Pages\CreateDelegate;
+use App\Filament\Resources\Delegates\Pages\EditDelegate;
+use App\Filament\Resources\Delegates\Pages\ListDelegates;
+use App\Filament\Resources\Learners\LearnerResource;
 use App\Models\User;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -21,15 +21,14 @@ use Filament\Tables\Table;
 use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Group;
-use Filament\Resources\Pages\ManageRelationRecords;
 
-class LearnerResource extends Resource
+class DelegateResource extends Resource
 {
     protected static ?string $model = User::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
-    protected static ?string $navigationLabel = 'Learners';
-    protected static ?string $modelLabel = 'Learner';
+    protected static ?string $navigationLabel = 'Delegates';
+    protected static ?string $modelLabel = 'Delegate';
     protected static ?int $navigationSort = 40; // after Courses (30)
 
     public static function form(Schema $schema): Schema
@@ -142,15 +141,14 @@ class LearnerResource extends Resource
                 TextColumn::make('courses.name')
                     ->label('Courses')
                     ->sortable(),
-            ])
-            ->recordUrl(fn($record) => LearnerResource::getUrl('courses', [ 'record' => $record ]))
+            ])->recordUrl(fn($record) => DelegateResource::getUrl('courses', [ 'record' => $record ]))
             ->recordActions([
                 Action::make('courses')
                     ->label('Courses')
                     ->icon('heroicon-o-academic-cap')
                     ->iconButton()
                     ->color('info')
-                    ->url(fn($record) => LearnerResource::getUrl('courses', [ 'record' => $record ])),
+                    ->url(fn($record) => DelegateResource::getUrl('courses', [ 'record' => $record ])),
 
                 EditAction::make()->iconButton(),
                 DeleteAction::make()->iconButton(),
@@ -160,19 +158,11 @@ class LearnerResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ListLearners::route('/'),
-            'create' => CreateLearner::route('/create'),
-            'edit' => EditLearner::route('/{record}/edit'),
-            'courses' => Pages\ManageLeanerCourses::route('/{record}/courses'),
-
+            'index' => ListDelegates::route('/'),
+            'create' => CreateDelegate::route('/create'),
+            'edit' => EditDelegate::route('/{record}/edit'),
+            'courses' => Pages\ManageDelegateCourses::route('/{record}/courses'),
         ];
     }
 
-    public static function getRelations(): array
-    {
-        return [
-            //  CoursesRelationManager::class,
-        ];
-    }
 }
-

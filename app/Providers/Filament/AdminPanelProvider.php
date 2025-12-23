@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\EditProfile;
+use App\Livewire\CalendarWidget;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -21,6 +22,8 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Actions\Action;
+use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
+use Filament\Support\Assets\Css;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -49,11 +52,29 @@ class AdminPanelProvider extends PanelProvider
                 Dashboard::class,
             ])
             ->plugins([
+                FilamentFullCalendarPlugin::make()
+                    ->selectable()
+                    ->timezone('Europe/London')
+                    ->config([
+                        'firstDay' => 1,
+                        'nextDayThreshold' => '00:00',
+                        'displayEventTime' => false,
+                        'eventDisplay' => 'block',
+                        'eventOrder' => 'duration',
+                        // 'height' => 'auto',
+                        'fixedWeekCount' => false,
+                        'headerToolbar' => [
+                            'left' => 'prev,next today',
+                            'center' => 'title',
+                            'right' => 'dayGridMonth,dayGridWeek,dayGridDay',
+                        ]
+
+                    ]),
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
-
+                CalendarWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -68,6 +89,15 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+            ])
+            ->assets([
+                Css::make(
+                    'filament-fullcalendar',
+                    asset('vendor/filament-fullcalendar/filament-fullcalendar.css')
+                ),
+
             ]);
     }
+
+
 }

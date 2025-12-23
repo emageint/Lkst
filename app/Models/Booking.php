@@ -2,18 +2,20 @@
 
 namespace App\Models;
 
+use App\Enums\BookingStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class TrainingJob extends Model
+
+class Booking extends Model
 {
     use SoftDeletes;
 
     protected $fillable = [
         'course_id',
         'customer_id',
-        'tutor_id',
+        'instructor_id',
         'job_datetime',
         'training_location_line1',
         'training_location_line2',
@@ -27,7 +29,9 @@ class TrainingJob extends Model
 
     protected $casts = [
         'number_of_learners' => 'integer',
+        'status' => BookingStatus::class,
     ];
+
 
     public function course(): BelongsTo
     {
@@ -39,9 +43,9 @@ class TrainingJob extends Model
         return $this->belongsTo(User::class, 'customer_id');
     }
 
-    public function tutor(): BelongsTo
+    public function instructor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'tutor_id');
+        return $this->belongsTo(User::class, 'instructor_id');
     }
 
     public function getTrainingLocationAttribute(): string
