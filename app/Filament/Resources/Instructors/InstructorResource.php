@@ -11,12 +11,15 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
+use Novadaemon\FilamentCombobox\Combobox;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Validation\Rule;
+
 
 class InstructorResource extends Resource
 {
@@ -50,8 +53,24 @@ class InstructorResource extends Resource
                     ->dehydrated(fn(?string $state): bool => filled($state))
                     ->required(fn(string $operation): bool => $operation === 'create')
                     ->maxLength(255),
+
+                Section::make('')
+                    ->schema([
+                        Combobox::make('courses')
+                            ->label('Courses the instructor can teach')
+                            ->relationship('courses', 'name')
+                            ->multiple()
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->columnSpanFull()
+                            ->extraAttributes([ 'class' => 'cbx-tall' ]),
+                    ])
+                    ->extraAttributes([ 'class' => 'cbx-tall' ])
+                    ->columnSpanFull(),
             ]);
     }
+
 
     public static function table(Table $table): Table
     {

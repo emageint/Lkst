@@ -11,6 +11,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Filament\Models\Contracts\HasName;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Filament\Facades\Filament;
 
 
@@ -68,6 +69,11 @@ class User extends Authenticatable implements HasName
         return $this->belongsToMany(Course::class)
             ->withPivot([ 'date_completed', 'certificate_path', 'notes' ])
             ->withTimestamps();
+    }
+
+    public function externalCalendarAccounts(): HasMany
+    {
+        return $this->hasMany(ExternalCalendarAccount::class);
     }
 
     // Audit relations

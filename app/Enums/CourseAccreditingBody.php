@@ -11,6 +11,9 @@ enum CourseAccreditingBody: string
     case IPAF = 'IPAF';
     case PASMA = 'PASMA';
     case NPORS = 'NPORS';
+    case EUSR = 'EUSR';
+    case CABWI = 'CABWI';
+    case SQA = 'SQA';
 
     public function label(): string
     {
@@ -27,6 +30,9 @@ enum CourseAccreditingBody: string
             self::IPAF->value => self::IPAF->label(),
             self::PASMA->value => self::PASMA->label(),
             self::NPORS->value => self::NPORS->label(),
+            self::EUSR->value => self::EUSR->label(),
+            self::CABWI->value => self::CABWI->label(),
+            self::SQA->value => self::SQA->label(),
         ];
     }
 }

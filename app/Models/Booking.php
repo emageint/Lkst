@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use App\Enums\BookingStatus;
+use App\Observers\BookingObserver;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 
+#[ObservedBy(BookingObserver::class)]
 class Booking extends Model
 {
     use SoftDeletes;
@@ -16,26 +19,34 @@ class Booking extends Model
         'course_id',
         'customer_id',
         'instructor_id',
-        'job_datetime',
+        'start',
+        'end',
         'training_location_line1',
         'training_location_line2',
         'training_location_line3',
         'training_location_city',
         'training_location_postcode',
-        'number_of_learners',
+        'course_variable_type',
+        'course_duration',
+        'max_delegates',
         'notes',
         'status',
+        'outlook_event_id',
     ];
 
+
     protected $casts = [
-        'number_of_learners' => 'integer',
+        'course_duration' => 'integer',
+        'max_delegates' => 'integer',
         'status' => BookingStatus::class,
+        'start' => 'datetime',
+        'end' => 'datetime',
     ];
 
 
     public function course(): BelongsTo
     {
-        return $this->belongsTo(Course::class);
+        return $this->belongsTo(Course::class)->withTrashed();
     }
 
     public function customer(): BelongsTo
