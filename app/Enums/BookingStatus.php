@@ -2,32 +2,31 @@
 
 namespace App\Enums;
 
-use Carbon\Carbon;
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
 
-enum BookingStatus: string
+enum BookingStatus: string implements HasColor, HasLabel
 {
     case Pending = 'pending';
     case Confirmed = 'confirmed';
     case Expired = 'expired';
 
 
-    public function label(): string
+    public function getLabel(): ?string
     {
         return match ($this) {
             self::Pending => 'Pending',
             self::Confirmed => 'Confirmed',
             self::Expired => 'Expired',
-
         };
     }
 
-    public function color(): string
+    public function getColor(): string|array|null
     {
         return match ($this) {
             self::Pending => 'gray',
             self::Confirmed => 'success',
             self::Expired => 'danger',
-
         };
     }
 

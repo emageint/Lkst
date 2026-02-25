@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 
 #[ObservedBy(BookingObserver::class)]
@@ -32,6 +33,7 @@ class Booking extends Model
         'notes',
         'status',
         'outlook_event_id',
+        'delegates_submitted',
     ];
 
 
@@ -41,6 +43,7 @@ class Booking extends Model
         'status' => BookingStatus::class,
         'start' => 'datetime',
         'end' => 'datetime',
+        'delegates_submitted' => 'boolean',
     ];
 
 
@@ -58,6 +61,12 @@ class Booking extends Model
     {
         return $this->belongsTo(User::class, 'instructor_id');
     }
+
+    public function delegates(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'booking_user')->withTimestamps();
+    }
+
 
     public function getTrainingLocationAttribute(): string
     {

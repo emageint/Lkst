@@ -80,7 +80,7 @@ class BookingForm
                                     })
                                     ->columnSpan(1),
 
-                                
+
                                 TextEntry::make('course_duration_display')
                                     ->label('Course Duration (hours)')
                                     ->state(fn(Get $get) => filled($get('course_duration')) ? ((string)$get('course_duration') . ' h') : '—')
@@ -147,10 +147,19 @@ class BookingForm
                                         filled($get('course_id')),
                                         fn($q) => $q->whereHas('courses', fn($cq) => $cq->where('courses.id', $get('course_id')))
                                     )
+                                    ->when(
+                                        filled($get('start')),
+                                        fn($q) => $q->whereDoesntHave('holidays', function ($hq) use ($get) {
+                                            $date = \Carbon\Carbon::parse($get('start'))->toDateString();
+                                            $hq->where('start_date', '<=', $date)
+                                                ->where('end_date', '>=', $date);
+                                        })
+                                    )
                             )
                             ->getOptionLabelFromRecordUsing(fn(User $record) => $record->first_name . ' ' . $record->last_name)
                             ->searchable([ 'first_name', 'last_name', 'email' ])
                             ->preload()
+                            ->live()
                             ->disabled(fn(Get $get) => blank($get('course_id')))
                             ->columnSpan(1),
                         DateTimePicker::make('start')
@@ -161,6 +170,7 @@ class BookingForm
                             ->seconds(false)
                             ->live()
                             ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                                $set('instructor_id', null);
                                 $service = app(BookingScheduleService::class);
                                 $start = $service->normalizeStart($state);
                                 $end = $service->calculateEnd($start, (int)$get('course_duration'));

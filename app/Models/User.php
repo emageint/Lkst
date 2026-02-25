@@ -30,6 +30,7 @@ class User extends Authenticatable implements HasName
         'password',
         'first_name',
         'last_name',
+        'color',
         'address_line1',
         'address_line2',
         'address_line3',
@@ -76,6 +77,12 @@ class User extends Authenticatable implements HasName
         return $this->hasMany(ExternalCalendarAccount::class);
     }
 
+    public function holidays(): HasMany
+    {
+        return $this->hasMany(Holiday::class);
+    }
+
+    
     // Audit relations
     public function creator(): BelongsTo
     {

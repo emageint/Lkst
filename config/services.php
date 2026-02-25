@@ -35,6 +35,10 @@ return [
         ],
     ],
 
+    'brevo' => [
+        'key' => env('BREVO_API_KEY'),
+    ],
+
     'outlook' => [
         'tenant_id' => env('OUTLOOK_TENANT_ID', 'common'),
         'client_id' => env('OUTLOOK_CLIENT_ID'),
@@ -43,4 +47,5 @@ return [
     ],
 
 ];
+
 

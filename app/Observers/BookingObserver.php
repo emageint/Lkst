@@ -2,16 +2,26 @@
 
 namespace App\Observers;
 
+use App\Mail\BookingUpdateMail;
 use App\Models\Booking;
 use App\Models\ExternalCalendarAccount;
 use App\Services\Outlook\OutlookGraphService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 
 
 class BookingObserver
 {
     public function created(Booking $booking): void
     {
+        if ($booking->customer) {
+            $url = URL::signedRoute('public.booking.form', [
+                'booking' => $booking->id,
+            ]);
+            Mail::to($booking->customer->email)->send(new BookingUpdateMail($url));
+        }
+
         $account = $this->getAccount($booking);
         if (!$account || $booking->start === null || $booking->end === null) {
             return;

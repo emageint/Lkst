@@ -13,7 +13,9 @@
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "novadaemon/filament-combobox": "^2.1",
-        "saade/filament-fullcalendar": "4.0.0-beta2"
+        "saade/filament-fullcalendar": "4.0.0-beta2",
+        "symfony/brevo-mailer": "^7.4",
+        "symfony/http-client": "^7.4"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

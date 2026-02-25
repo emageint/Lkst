@@ -2,23 +2,18 @@
 
 namespace App\Filament\Resources\Instructors;
 
-use App\Filament\Resources\Instructors\Pages\ManageInstructors;
-use App\Models\Holiday;
+use App\Filament\Resources\Instructors\Pages\ListInstructors;
+use App\Filament\Resources\Instructors\Pages\CreateInstructor;
+use App\Filament\Resources\Instructors\Pages\EditInstructor;
+use App\Filament\Resources\Instructors\Schemas\InstructorForm;
+use App\Filament\Resources\Instructors\Tables\InstructorsTable;
+use App\Filament\Resources\Instructors\RelationManagers\HolidaysRelationManager;
 use App\Models\User;
 use BackedEnum;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Forms\Components\TextInput;
-use Novadaemon\FilamentCombobox\Combobox;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Validation\Rule;
 
 
 class InstructorResource extends Resource
@@ -34,82 +29,28 @@ class InstructorResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $schema
-            ->components([
-                TextInput::make('first_name')
-                    ->required()
-                    ->maxLength(255),
-                TextInput::make('last_name')
-                    ->required()
-                    ->maxLength(255),
-                TextInput::make('email')
-                    ->label('Email address')
-                    ->email()
-                    ->scopedUnique()
-                    ->required()
-                    ->maxLength(255),
-                TextInput::make('password')
-                    ->password()
-                    ->dehydrated(fn(?string $state): bool => filled($state))
-                    ->required(fn(string $operation): bool => $operation === 'create')
-                    ->maxLength(255),
-
-                Section::make('')
-                    ->schema([
-                        Combobox::make('courses')
-                            ->label('Courses the instructor can teach')
-                            ->relationship('courses', 'name')
-                            ->multiple()
-                            ->searchable()
-                            ->preload()
-                            ->required()
-                            ->columnSpanFull()
-                            ->extraAttributes([ 'class' => 'cbx-tall' ]),
-                    ])
-                    ->extraAttributes([ 'class' => 'cbx-tall' ])
-                    ->columnSpanFull(),
-            ]);
+        return InstructorForm::configure($schema);
     }
-
 
     public static function table(Table $table): Table
     {
-        return $table
-            ->query(User::query()->whereHas('roles', function ($query) {
-                $query->where('name', 'Instructor');
-            }))
-            ->columns([
-                TextColumn::make('full_name')
-                    ->label('Name')
-                    ->sortable([ 'first_name',
-                        'last_name' ])
-                    ->searchable([ 'first_name', 'last_name' ]),
-
-                TextColumn::make('email')
-                    ->label('Email address')
-                    ->searchable()
-                    ->sortable(),
-            ])
-            ->filters([
-                //
-            ])
-            ->recordActions([
-                EditAction::make()->iconButton(),
-                DeleteAction::make()->iconButton(),
-            ]);
+        return InstructorsTable::configure($table);
     }
 
     public static function getRelations(): array
     {
         return [
-            //
+            HolidaysRelationManager::class,
         ];
     }
 
+    
     public static function getPages(): array
     {
         return [
-            'index' => ManageInstructors::route('/'),
+            'index' => ListInstructors::route('/'),
+            'create' => CreateInstructor::route('/create'),
+            'edit' => EditInstructor::route('/{record}/edit'),
         ];
     }
 }

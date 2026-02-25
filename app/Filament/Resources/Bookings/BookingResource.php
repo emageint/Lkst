@@ -5,7 +5,9 @@ namespace App\Filament\Resources\Bookings;
 use App\Filament\Resources\Bookings\Pages\CreateBooking;
 use App\Filament\Resources\Bookings\Pages\EditBooking;
 
+
 use App\Filament\Resources\Bookings\Pages\ListBookings;
+use App\Filament\Resources\Bookings\RelationManagers\DelegatesRelationManager;
 use App\Filament\Resources\Bookings\Schemas\BookingForm;
 use App\Filament\Resources\Bookings\Tables\BookingsTable;
 use App\Models\Job;
@@ -40,10 +42,11 @@ class BookingResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            DelegatesRelationManager::class,
         ];
     }
 
+    
     public static function getPages(): array
     {
         return [

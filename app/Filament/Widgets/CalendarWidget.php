@@ -16,8 +16,8 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -26,6 +26,7 @@ use Illuminate\Support\Str;
 use Saade\FilamentFullCalendar\Actions;
 use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
 use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
+
 
 class CalendarWidget extends FullCalendarWidget
 {
@@ -54,21 +55,48 @@ class CalendarWidget extends FullCalendarWidget
 
         return $query->get()
             ->map(function (Booking $booking) {
-                $titleParts = array_filter([
-                    $booking->course?->name,
-                    $booking->instructor?->full_name,
-                ]);
+                $color = $booking->instructor?->color ?? '#3b82f6';
 
                 return [
                     'id' => (string)$booking->id,
-                    'title' => implode(' — ', $titleParts) ?: 'Booking',
+                    'title' => $booking->instructor?->full_name ?? 'Booking',
                     'start' => $booking->start?->toIso8601String(),
                     'end' => $booking->end?->toIso8601String(),
                     'allDay' => false,
+                    'backgroundColor' => $color,
+                    'borderColor' => $color,
+                    'textColor' => $this->getTextColorForBackground($color),
+                    'extendedProps' => [
+                        'course' => $booking->course?->name ?? '',
+                    ],
                 ];
             })
             ->values()
             ->all();
+    }
+
+    public function eventDidMount(): string
+    {
+        return <<<JS
+            function({ event, timeText, isStart, isEnd, isMirror, isPast, isFuture, isToday, el, view }){
+                el.setAttribute("x-tooltip", "tooltip");
+                el.setAttribute("x-data", "{ tooltip: '" + event.extendedProps.course + "' }");
+            }
+        JS;
+    }
+
+    protected function getTextColorForBackground(string $hex): string
+    {
+        $hex = ltrim($hex, '#');
+        [ $r, $g, $b ] = array_map(fn($c) => hexdec($c) / 255, str_split($hex, 2));
+
+        $toLinear = fn(float $c): float => $c <= 0.04045
+            ? $c / 12.92
+            : (($c + 0.055) / 1.055) ** 2.4;
+
+        $luminance = 0.2126 * $toLinear($r) + 0.7152 * $toLinear($g) + 0.0722 * $toLinear($b);
+
+        return $luminance > 0.179 ? '#1f2937' : '#ffffff';
     }
 
     protected function headerActions(): array
@@ -81,8 +109,23 @@ class CalendarWidget extends FullCalendarWidget
                 ->openUrlInNewTab(),
             Actions\CreateAction::make()
                 ->visible(fn() => $this->canManageCalendar())
+                ->mountUsing(function (Schema $form, array $arguments): void {
+                    $start = data_get($arguments, 'start');
+                    if (!$start) {
+                        return;
+                    }
+
+                    $start = $start instanceof Carbon
+                        ? $start->copy()
+                        : Carbon::parse($start);
+
+                    $form->fill([
+                        'start' => $start->setTime(8, 0),
+                    ]);
+                })
 
         ];
+
     }
 
 
@@ -240,10 +283,19 @@ class CalendarWidget extends FullCalendarWidget
                                     filled($get('course_id')),
                                     fn($q) => $q->whereHas('courses', fn($cq) => $cq->where('courses.id', $get('course_id')))
                                 )
+                                ->when(
+                                    filled($get('start')),
+                                    fn($q) => $q->whereDoesntHave('holidays', function ($hq) use ($get) {
+                                        $date = \Carbon\Carbon::parse($get('start'))->toDateString();
+                                        $hq->where('start_date', '<=', $date)
+                                            ->where('end_date', '>=', $date);
+                                    })
+                                )
                         )
                         ->getOptionLabelFromRecordUsing(fn(User $record) => $record->first_name . ' ' . $record->last_name)
                         ->searchable([ 'first_name', 'last_name', 'email' ])
                         ->preload()
+                        ->live()
                         ->disabled(fn(Get $get) => blank($get('course_id')))
                         ->columnSpan(1),
                     DateTimePicker::make('start')
@@ -254,6 +306,7 @@ class CalendarWidget extends FullCalendarWidget
                         ->seconds(false)
                         ->live()
                         ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                            $set('instructor_id', null);
                             $service = app(BookingScheduleService::class);
                             $start = $service->normalizeStart($state);
                             $end = $service->calculateEnd($start, (int)$get('course_duration'));

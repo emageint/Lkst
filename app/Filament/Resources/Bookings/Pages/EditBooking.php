@@ -22,4 +22,8 @@ class EditBooking extends EditRecord
         return BookingResource::getUrl('index');
     }
 
+    public function hasCombinedRelationManagerTabsWithContent(): bool
+    {
+        return true;
+    }
 }
