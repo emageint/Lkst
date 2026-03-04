@@ -34,6 +34,9 @@ class Booking extends Model
         'status',
         'outlook_event_id',
         'delegates_submitted',
+        'location_lkst_yard',
+        'form_expires_at',
+        'reminder_sent_at',
     ];
 
 
@@ -44,6 +47,9 @@ class Booking extends Model
         'start' => 'datetime',
         'end' => 'datetime',
         'delegates_submitted' => 'boolean',
+        'location_lkst_yard' => 'boolean',
+        'form_expires_at' => 'datetime',
+        'reminder_sent_at' => 'datetime',
     ];
 
 

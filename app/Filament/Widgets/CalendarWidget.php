@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Actions\HolidaysAction;
 use App\Enums\HolidaysStatus;
 use App\Models\Booking;
 use App\Models\Course;
@@ -16,6 +17,7 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
@@ -37,6 +39,7 @@ class CalendarWidget extends FullCalendarWidget
 
     public function fetchEvents(array $info): array
     {
+        $ukHolidays = HolidaysAction::ukHolidaysWithName();
         $start = Carbon::parse($info['start']);
         $end = Carbon::parse($info['end']);
 
@@ -44,6 +47,7 @@ class CalendarWidget extends FullCalendarWidget
             ->with([ 'course', 'customer', 'instructor' ])
             ->whereNotNull('start')
             ->whereNotNull('end')
+            ->where('status', '!=', \App\Enums\BookingStatus::Expired)
             ->where(function ($query) use ($start, $end) {
                 $query->where('start', '<', $end)
                     ->where('end', '>', $start);
@@ -53,7 +57,7 @@ class CalendarWidget extends FullCalendarWidget
                 fn($query) => $query->where('instructor_id', auth()->id())
             );
 
-        return $query->get()
+        $bookings = $query->get()
             ->map(function (Booking $booking) {
                 $color = $booking->instructor?->color ?? '#3b82f6';
 
@@ -68,22 +72,32 @@ class CalendarWidget extends FullCalendarWidget
                     'textColor' => $this->getTextColorForBackground($color),
                     'extendedProps' => [
                         'course' => $booking->course?->name ?? '',
+                        'location' => $booking->location_lkst_yard
+                            ? 'LKST Yard'
+                            : $booking->training_location,
                     ],
                 ];
             })
             ->values()
             ->all();
+
+        return array_merge($bookings, $ukHolidays);
     }
+
 
     public function eventDidMount(): string
     {
         return <<<JS
             function({ event, timeText, isStart, isEnd, isMirror, isPast, isFuture, isToday, el, view }){
                 el.setAttribute("x-tooltip", "tooltip");
-                el.setAttribute("x-data", "{ tooltip: '" + event.extendedProps.course + "' }");
+                el.setAttribute("data-tippy-allowHTML", "true");
+                var loc = 'Location: ' + (event.extendedProps.location || 'N/A');
+                var parts = [event.extendedProps.course, loc].filter(Boolean);
+                el.setAttribute("x-data", "{ tooltip: '" + parts.join('<br>') + "' }");
             }
         JS;
     }
+
 
     protected function getTextColorForBackground(string $hex): string
     {
@@ -187,6 +201,11 @@ class CalendarWidget extends FullCalendarWidget
                             $set('instructor_id', null);
                         })
                         ->columnSpan(1),
+                    Toggle::make('location_lkst_yard')
+                        ->label('Location: LKST Yard')
+                        ->inline(false)
+                        ->default(false)
+                        ->columnSpan(1),
                     Section::make('')
                         ->columns(3)
                         ->schema([
@@ -235,6 +254,28 @@ class CalendarWidget extends FullCalendarWidget
                         ->columnSpanFull(),
                     Hidden::make('course_duration'),
                     Hidden::make('max_delegates'),
+                    DateTimePicker::make('start')
+                        ->label('Start')
+                        ->required()
+                        ->native(false)
+                        ->displayFormat('d/m/Y H:i')
+                        ->seconds(false)
+                        ->live()
+                        ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                            $set('instructor_id', null);
+                            $service = app(BookingScheduleService::class);
+                            $start = $service->normalizeStart($state);
+                            $end = $service->calculateEnd($start, (int)$get('course_duration'));
+                            if ($end) {
+                                $set('end', $end);
+                            }
+                        }),
+                    DateTimePicker::make('end')
+                        ->label('End')
+                        ->required()
+                        ->native(false)
+                        ->displayFormat('d/m/Y H:i')
+                        ->seconds(false),
                     Select::make('customer_id')
                         ->label('Customer Name')
                         ->relationship(
@@ -298,28 +339,7 @@ class CalendarWidget extends FullCalendarWidget
                         ->live()
                         ->disabled(fn(Get $get) => blank($get('course_id')))
                         ->columnSpan(1),
-                    DateTimePicker::make('start')
-                        ->label('Start')
-                        ->required()
-                        ->native(false)
-                        ->displayFormat('d/m/Y H:i')
-                        ->seconds(false)
-                        ->live()
-                        ->afterStateUpdated(function ($state, Set $set, Get $get) {
-                            $set('instructor_id', null);
-                            $service = app(BookingScheduleService::class);
-                            $start = $service->normalizeStart($state);
-                            $end = $service->calculateEnd($start, (int)$get('course_duration'));
-                            if ($end) {
-                                $set('end', $end);
-                            }
-                        }),
-                    DateTimePicker::make('end')
-                        ->label('End')
-                        ->required()
-                        ->native(false)
-                        ->displayFormat('d/m/Y H:i')
-                        ->seconds(false),
+
                 ]),
         ];
     }

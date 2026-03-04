@@ -21,6 +21,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
+use Filament\Support\Enums\Width;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -36,6 +37,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogo(asset('images/logo-light.png'))
             ->darkModeBrandLogo(asset('images/logo-dark.png'))
             ->brandLogoHeight('3rem')
+            ->maxContentWidth(Width::Full)
             ->colors([
                 'primary' => Color::Yellow,
             ])

@@ -17,7 +17,7 @@ class BookingScheduleService
         if (!$start || !$durationHours) {
             return null;
         }
- 
+
         $workStartHour = self::WORK_START_HOUR;
         $workEndHour = self::WORK_END_HOUR;
         $remainingMinutes = $durationHours * 60;
@@ -100,6 +100,20 @@ class BookingScheduleService
         });
     }
 
+    public function addBusinessHours(CarbonInterface $from, int $hours): CarbonInterface
+    {
+        $deadline = $from->copy()->addHours($hours);
+
+        if ($this->isNonWorkingDay($deadline)) {
+            $deadline = $this->moveToNextWorkingDay(
+                $deadline->copy()->setTime(self::WORK_END_HOUR, 0),
+                self::WORK_START_HOUR
+            )->setTime(self::WORK_END_HOUR, 0);
+        }
+
+        return $deadline;
+    }
+
     public function normalizeStart(mixed $value): ?CarbonInterface
     {
         if (!$value) {
@@ -113,4 +127,5 @@ class BookingScheduleService
         return Carbon::parse($value);
     }
 }
+
 

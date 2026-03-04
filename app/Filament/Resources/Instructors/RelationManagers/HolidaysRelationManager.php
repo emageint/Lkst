@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Instructors\RelationManagers;
 
+use App\Models\Holiday;
+use App\Observers\HolidayObserver;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -68,3 +70,4 @@ class HolidaysRelationManager extends RelationManager
             ->defaultSort('start_date', 'desc');
     }
 }
+

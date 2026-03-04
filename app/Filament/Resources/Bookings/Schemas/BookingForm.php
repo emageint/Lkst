@@ -9,6 +9,7 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -16,6 +17,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use App\Services\BookingScheduleService;
 use Illuminate\Support\Str;
+
 
 class BookingForm
 {
@@ -42,6 +44,11 @@ class BookingForm
                             })
                             ->columnSpan(1),
 
+                        Toggle::make('location_lkst_yard')
+                            ->label('Location: LKST Yard')
+                            ->inline(false)
+                            ->default(false)
+                            ->columnSpan(1),
 
                         Section::make('')
                             ->columns(3)
@@ -95,7 +102,36 @@ class BookingForm
 
                         Hidden::make('course_duration'),
                         Hidden::make('max_delegates'),
+                        DateTimePicker::make('start')
+                            ->label('Start')
+                            ->required()
+                            ->native(false)
+                            ->displayFormat('d/m/Y H:i')
+                            ->seconds(false)
+                            ->live()
+                            ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                                $set('instructor_id', null);
+                                $service = app(BookingScheduleService::class);
+                                $start = $service->normalizeStart($state);
+                                $end = $service->calculateEnd($start, (int)$get('course_duration'));
+                                if ($end) {
+                                    $set('end', $end->toDateTimeString());
+                                }
+                            })
+                            ->dehydrateStateUsing(fn($state) => $state
+                                ? \Carbon\Carbon::parse($state)->toDateTimeString()
+                                : $state),
 
+
+                        DateTimePicker::make('end')
+                            ->label('End')
+                            ->required()
+                            ->native(false)
+                            ->displayFormat('d/m/Y H:i')
+                            ->seconds(false)
+                            ->dehydrateStateUsing(fn($state) => $state
+                                ? \Carbon\Carbon::parse($state)->toDateTimeString()
+                                : $state),
                         Select::make('customer_id')
                             ->label('Customer Name')
                             ->relationship(
@@ -162,36 +198,7 @@ class BookingForm
                             ->live()
                             ->disabled(fn(Get $get) => blank($get('course_id')))
                             ->columnSpan(1),
-                        DateTimePicker::make('start')
-                            ->label('Start')
-                            ->required()
-                            ->native(false)
-                            ->displayFormat('d/m/Y H:i')
-                            ->seconds(false)
-                            ->live()
-                            ->afterStateUpdated(function ($state, Set $set, Get $get) {
-                                $set('instructor_id', null);
-                                $service = app(BookingScheduleService::class);
-                                $start = $service->normalizeStart($state);
-                                $end = $service->calculateEnd($start, (int)$get('course_duration'));
-                                if ($end) {
-                                    $set('end', $end->toDateTimeString());
-                                }
-                            })
-                            ->dehydrateStateUsing(fn($state) => $state
-                                ? \Carbon\Carbon::parse($state)->toDateTimeString()
-                                : $state),
 
-
-                        DateTimePicker::make('end')
-                            ->label('End')
-                            ->required()
-                            ->native(false)
-                            ->displayFormat('d/m/Y H:i')
-                            ->seconds(false)
-                            ->dehydrateStateUsing(fn($state) => $state
-                                ? \Carbon\Carbon::parse($state)->toDateTimeString()
-                                : $state),
 
                     ])
             ]);

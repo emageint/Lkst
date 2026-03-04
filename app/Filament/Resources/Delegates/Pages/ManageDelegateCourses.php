@@ -31,16 +31,6 @@ class ManageDelegateCourses extends ManageRelatedRecords
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    public function mount($record): void
-    {
-        parent::mount($record);
-
-        \Filament\Facades\Filament::registerRenderHook(
-            'widgets.stats-overview.before',
-            fn() => ""
-        );
-    }
-
     public function form(Schema $schema): Schema
     {
         return $schema
@@ -68,6 +58,7 @@ class ManageDelegateCourses extends ManageRelatedRecords
                     ->rows(3),
             ]);
     }
+
 
     public function getTitle(): string
     {
@@ -180,5 +171,5 @@ class ManageDelegateCourses extends ManageRelatedRecords
             LearnerCoursesStats::class,
         ];
     }
-
 }
+

@@ -12,6 +12,7 @@ use Filament\Models\Contracts\HasName;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Booking;
 use Filament\Facades\Filament;
 
 
@@ -82,7 +83,17 @@ class User extends Authenticatable implements HasName
         return $this->hasMany(Holiday::class);
     }
 
-    
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class, 'customer_id');
+    }
+
+    public function bookingDelegates(): BelongsToMany
+    {
+        return $this->belongsToMany(Booking::class, 'booking_user')->withTimestamps();
+    }
+
+
     // Audit relations
     public function creator(): BelongsTo
     {

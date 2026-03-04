@@ -55,6 +55,11 @@ class DelegatesRelationManager extends RelationManager
 
                 CreateAction::make()
                     ->label('Add Delegate')
+                    ->hidden(function (DelegatesRelationManager $livewire) {
+                        $booking = $livewire->getOwnerRecord();
+                        $max = $booking->max_delegates ?? PHP_INT_MAX;
+                        return $booking->delegates()->count() >= $max;
+                    })
                     ->using(function (array $data, DelegatesRelationManager $livewire) {
                         $booking = $livewire->getOwnerRecord();
 
@@ -98,5 +103,5 @@ class DelegatesRelationManager extends RelationManager
             ->defaultSort('first_name');
     }
 
-    
+
 }

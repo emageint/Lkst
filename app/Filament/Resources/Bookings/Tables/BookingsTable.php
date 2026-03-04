@@ -38,20 +38,25 @@ class BookingsTable
                     ->sortable(),
 
 
-//                TextColumn::make('training_location')
-//                    ->label('Location')
-//                    ->searchable([
-//                        'training_location_line1',
-//                        'training_location_line2',
-//                        'training_location_line3',
-//                        'training_location_city',
-//                        'training_location_postcode',
-//                    ])
-//                    ->sortable(query: function ($query, $direction) {
-//                        return $query
-//                            ->orderBy('training_location_city', $direction)
-//                            ->orderBy('training_location_postcode', $direction);
-//                    }),
+                TextColumn::make('location')
+                    ->label('Location')
+                    ->getStateUsing(fn($record) => $record->location_lkst_yard
+                        ? 'LKST Yard'
+                        : $record->training_location
+                    )
+                    ->searchable([
+                        'training_location_line1',
+                        'training_location_city',
+                        'training_location_postcode',
+                    ])
+                    ->wrap(),
+                TextColumn::make('delegates_count')
+                    ->label('Delegates')
+                    ->counts('delegates')
+                    ->formatStateUsing(fn($state, $record) => $state . ' / ' . ($record->max_delegates ?? '∞'))
+                    ->sortable(),
+
+
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge(),

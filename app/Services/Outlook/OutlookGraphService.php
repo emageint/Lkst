@@ -91,3 +91,5 @@ class OutlookGraphService
             ->delete("https://graph.microsoft.com/v1.0/me/events/{$eventId}");
     }
 }
+
+

@@ -10,9 +10,14 @@ class EditInstructor extends EditRecord
 {
     protected static string $resource = InstructorResource::class;
 
-    protected function getRedirectUrl(): string
+    public function getTitle(): string
     {
-        return InstructorResource::getUrl('index');
+        return $this->record->full_name ?? 'Edit Instructor';
+    }
+
+    protected function getSavedNotificationTitle(): ?string
+    {
+        return 'Instructor saved';
     }
 
     public function hasCombinedRelationManagerTabsWithContent(): bool

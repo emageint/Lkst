@@ -5,17 +5,21 @@ namespace App\Observers;
 use App\Mail\BookingUpdateMail;
 use App\Models\Booking;
 use App\Models\ExternalCalendarAccount;
+use App\Services\BookingScheduleService;
 use App\Services\Outlook\OutlookGraphService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
-
 
 class BookingObserver
 {
     public function created(Booking $booking): void
     {
         if ($booking->customer) {
+            $expiresAt = app(BookingScheduleService::class)->addBusinessHours(Carbon::now(), 48);
+            $booking->form_expires_at = $expiresAt;
+            $booking->saveQuietly();
+
             $url = URL::signedRoute('public.booking.form', [
                 'booking' => $booking->id,
             ]);
@@ -42,16 +46,50 @@ class BookingObserver
             return;
         }
 
+        if ($booking->wasChanged('status') && $booking->status === \App\Enums\BookingStatus::Expired) {
+            if ($booking->outlook_event_id) {
+                $account = $this->getAccount($booking);
+                if ($account) {
+                    app(OutlookGraphService::class)->deleteEvent($account, $booking->outlook_event_id);
+                }
+                $booking->outlook_event_id = null;
+                $booking->saveQuietly();
+            }
+            return;
+        }
+        
+
+        $service = app(OutlookGraphService::class);
+        $instructorChanged = $booking->wasChanged('instructor_id');
+
+        if ($instructorChanged && $booking->outlook_event_id) {
+            $oldInstructorId = $booking->getOriginal('instructor_id');
+            $oldAccount = $oldInstructorId
+                ? ExternalCalendarAccount::query()
+                    ->where('user_id', $oldInstructorId)
+                    ->where('provider', 'outlook')
+                    ->first()
+                : null;
+
+            if ($oldAccount) {
+                $service->deleteEvent($oldAccount, $booking->outlook_event_id);
+            }
+
+            $booking->outlook_event_id = null;
+            $booking->saveQuietly();
+        }
+
         $account = $this->getAccount($booking);
         if (!$account || $booking->start === null || $booking->end === null) {
             return;
         }
 
         $payload = $this->buildPayload($booking);
-        $service = app(OutlookGraphService::class);
 
-        if ($booking->outlook_event_id) {
-            $service->updateEvent($account, $booking->outlook_event_id, $payload);
+        $currentEventId = $booking->getOriginal('outlook_event_id') ?? $booking->outlook_event_id;
+
+        if ($currentEventId && !$instructorChanged) {
+            $service->updateEvent($account, $currentEventId, $payload);
             return;
         }
 

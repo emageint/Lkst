@@ -26,7 +26,7 @@ class EditDelegate extends EditRecord
     public function getTitle(): string
     {
         $record = $this->getRecord();
-        return $record?->full_name ?? 'Learner';
+        return $record?->full_name ?? 'Delegat';
     }
 
 
