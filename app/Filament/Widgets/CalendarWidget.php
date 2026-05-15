@@ -15,10 +15,12 @@ use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -122,7 +124,7 @@ class CalendarWidget extends FullCalendarWidget
                 ->visible(fn() => $this->canConnectOutlook())
                 ->openUrlInNewTab(),
             Actions\CreateAction::make()
-                ->visible(fn() => $this->canManageCalendar())
+                ->extraAttributes([ 'style' => 'display:none' ])
                 ->mountUsing(function (Schema $form, array $arguments): void {
                     $start = data_get($arguments, 'start');
                     if (!$start) {
@@ -139,6 +141,7 @@ class CalendarWidget extends FullCalendarWidget
                 })
 
         ];
+
 
     }
 
@@ -339,6 +342,17 @@ class CalendarWidget extends FullCalendarWidget
                         ->live()
                         ->disabled(fn(Get $get) => blank($get('course_id')))
                         ->columnSpan(1),
+
+                    RichEditor::make('price')
+                        ->label('Price + VAT')
+                        ->required()
+                        ->columnSpan(2),
+
+                    TextInput::make('po_number')
+                        ->label('PO Number')
+                        ->maxLength(255)
+                        ->columnSpan(1)
+                        ->hiddenOn('create'),
 
                 ]),
         ];

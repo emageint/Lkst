@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\Booking;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -14,10 +15,12 @@ class BookingUpdateMail extends Mailable
     use Queueable, SerializesModels;
 
     public string $url;
+    public Booking $booking;
 
-    public function __construct(string $url)
+    public function __construct(string $url, Booking $booking)
     {
         $this->url = $url;
+        $this->booking = $booking;
     }
 
     public function envelope(): Envelope

@@ -82,7 +82,7 @@ class UserResource extends Resource
                 TextColumn::make('email')
                     ->label('Email address')
                     ->searchable(),
-     
+
                 TextColumn::make('roles.name')
                     ->badge()
                     ->label('Role')->sortable()->searchable(),
@@ -95,6 +95,11 @@ class UserResource extends Resource
                 EditAction::make()->iconButton(),
                 DeleteAction::make()->iconButton(),
             ]);
+    }
+
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->hasRole('super_admin') ?? false;
     }
 
     public static function getPages(): array

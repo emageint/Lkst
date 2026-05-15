@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Customers\Schemas;
 
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -10,7 +11,7 @@ class CustomerForm
 {
     public static function configure(Schema $schema): Schema
     {
-        
+
         return $schema
             ->components([
                 Section::make()
@@ -50,6 +51,17 @@ class CustomerForm
                             ->maxLength(255),
                         TextInput::make('postcode')
                             ->maxLength(255),
+                        Repeater::make('emailRecipients')
+                            ->label('Additional Email Recipients')
+                            ->relationship()
+                            ->schema([
+                                TextInput::make('email')
+                                    ->label('Email address')
+                                    ->email()
+                                    ->required()
+                                    ->maxLength(255),
+                            ])
+                            ->addActionLabel('Add email recipient'),
                     ]),
             ]);
     }

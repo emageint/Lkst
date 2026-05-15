@@ -10,6 +10,7 @@ enum BookingStatus: string implements HasColor, HasLabel
     case Pending = 'pending';
     case Confirmed = 'confirmed';
     case Expired = 'expired';
+    case Completed = 'completed';
 
 
     public function getLabel(): ?string
@@ -18,6 +19,7 @@ enum BookingStatus: string implements HasColor, HasLabel
             self::Pending => 'Pending',
             self::Confirmed => 'Confirmed',
             self::Expired => 'Expired',
+            self::Completed => 'Completed',
         };
     }
 
@@ -27,6 +29,7 @@ enum BookingStatus: string implements HasColor, HasLabel
             self::Pending => 'gray',
             self::Confirmed => 'success',
             self::Expired => 'danger',
+            self::Completed => 'info',
         };
     }
 

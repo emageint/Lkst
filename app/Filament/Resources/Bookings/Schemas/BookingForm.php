@@ -7,7 +7,9 @@ use App\Models\CourseVariable;
 use App\Models\User;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
@@ -106,6 +108,7 @@ class BookingForm
                             ->label('Start')
                             ->required()
                             ->native(false)
+                            ->closeOnDateSelection()
                             ->displayFormat('d/m/Y H:i')
                             ->seconds(false)
                             ->live()
@@ -127,6 +130,7 @@ class BookingForm
                             ->label('End')
                             ->required()
                             ->native(false)
+                            ->closeOnDateSelection()
                             ->displayFormat('d/m/Y H:i')
                             ->seconds(false)
                             ->dehydrateStateUsing(fn($state) => $state
@@ -199,7 +203,15 @@ class BookingForm
                             ->disabled(fn(Get $get) => blank($get('course_id')))
                             ->columnSpan(1),
 
-
+                        RichEditor::make('price')
+                            ->label('Price + VAT')
+                            ->required()
+                            ->columnSpan(2),
+                        TextInput::make('po_number')
+                            ->label('PO Number')
+                            ->maxLength(255)
+                            ->columnSpan(1)
+                            ->hiddenOn('create'),
                     ])
             ]);
     }

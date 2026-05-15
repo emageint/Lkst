@@ -2,11 +2,14 @@
 
 namespace App\Filament\Resources\Bookings\Tables;
 
+use App\Enums\BookingStatus;
 use App\Enums\CourseStatus;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -65,6 +68,25 @@ class BookingsTable
                 // Add filters here if needed
             ])
             ->recordActions([
+                Action::make('complete')
+                    ->iconButton()
+                    ->modalHeading('Complete Booking')
+                    ->modalDescription('Please enter the reference number for the booking.')
+                    ->label('Complete Booking')
+                    ->icon('heroicon-o-check-circle')
+                    ->visible(fn($record) => $record->status === BookingStatus::Confirmed)
+                    ->schema([
+                        TextInput::make('ref_number')
+                            ->label('Ref Number')
+                            ->required()
+                            ->maxLength(255),
+                    ])
+                    ->action(function ($record, array $data): void {
+                        $record->update([
+                            'status' => BookingStatus::Completed,
+                            'ref_number' => $data['ref_number'],
+                        ]);
+                    }),
                 EditAction::make()->iconButton(),
                 DeleteAction::make()->iconButton(),
             ])

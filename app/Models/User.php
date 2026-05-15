@@ -88,6 +88,11 @@ class User extends Authenticatable implements HasName
         return $this->hasMany(Booking::class, 'customer_id');
     }
 
+    public function emailRecipients(): HasMany
+    {
+        return $this->hasMany(CustomerEmailRecipient::class);
+    }
+
     public function bookingDelegates(): BelongsToMany
     {
         return $this->belongsToMany(Booking::class, 'booking_user')->withTimestamps();

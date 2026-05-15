@@ -33,7 +33,7 @@ class ExpireBookings extends Command
             ->where('created_at', '<=', now()->subHours(24))
             ->whereNotNull('form_expires_at')
             ->where('form_expires_at', '>', now())
-            ->with('customer')
+            ->with('customer.emailRecipients')
             ->each(function (Booking $booking): void {
                 if (!$booking->customer) {
                     return;
@@ -43,9 +43,13 @@ class ExpireBookings extends Command
                     'booking' => $booking->id,
                 ]);
 
-                Mail::to($booking->customer->email)->send(new BookingReminderMail($url));
-
                 $booking->updateQuietly([ 'reminder_sent_at' => now() ]);
+
+                $additionalEmails = $booking->customer->emailRecipients->pluck('email')->all();
+                Mail::to($booking->customer->email)
+                    ->cc($additionalEmails)
+                    ->send(new BookingReminderMail($url));
             });
     }
 }
+

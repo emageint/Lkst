@@ -23,21 +23,12 @@ class BookingObserver
             $url = URL::signedRoute('public.booking.form', [
                 'booking' => $booking->id,
             ]);
-            Mail::to($booking->customer->email)->send(new BookingUpdateMail($url));
+            $additionalEmails = $booking->customer->emailRecipients->pluck('email')->all();
+            Mail::to($booking->customer->email)
+                ->cc($additionalEmails)
+                ->send(new BookingUpdateMail($url, $booking));
         }
 
-        $account = $this->getAccount($booking);
-        if (!$account || $booking->start === null || $booking->end === null) {
-            return;
-        }
-
-        $payload = $this->buildPayload($booking);
-        $response = app(OutlookGraphService::class)->createEvent($account, $payload);
-
-        if (!empty($response['id'])) {
-            $booking->outlook_event_id = $response['id'];
-            $booking->saveQuietly();
-        }
     }
 
     public function updated(Booking $booking): void
@@ -46,20 +37,26 @@ class BookingObserver
             return;
         }
 
-        if ($booking->wasChanged('status') && $booking->status === \App\Enums\BookingStatus::Expired) {
+        $service = app(OutlookGraphService::class);
+        $statusChanged = $booking->wasChanged('status');
+        $isConfirmed = $booking->status === \App\Enums\BookingStatus::Confirmed;
+
+        if ($statusChanged && !$isConfirmed) {
             if ($booking->outlook_event_id) {
                 $account = $this->getAccount($booking);
                 if ($account) {
-                    app(OutlookGraphService::class)->deleteEvent($account, $booking->outlook_event_id);
+                    $service->deleteEvent($account, $booking->outlook_event_id);
                 }
                 $booking->outlook_event_id = null;
                 $booking->saveQuietly();
             }
             return;
         }
-        
 
-        $service = app(OutlookGraphService::class);
+        if (!$isConfirmed) {
+            return;
+        }
+
         $instructorChanged = $booking->wasChanged('instructor_id');
 
         if ($instructorChanged && $booking->outlook_event_id) {

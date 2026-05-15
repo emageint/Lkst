@@ -37,6 +37,9 @@ class Booking extends Model
         'location_lkst_yard',
         'form_expires_at',
         'reminder_sent_at',
+        'ref_number',
+        'price',
+        'po_number',
     ];
 
 
