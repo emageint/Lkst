@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Mail\BookingChangedMail;
 use App\Mail\BookingUpdateMail;
 use App\Models\Booking;
 use App\Models\ExternalCalendarAccount;
@@ -36,6 +37,8 @@ class BookingObserver
         if ($booking->wasChanged('outlook_event_id')) {
             return;
         }
+
+        $this->notifyCustomerIfKeyFieldsChanged($booking);
 
         $service = app(OutlookGraphService::class);
         $statusChanged = $booking->wasChanged('status');
@@ -107,6 +110,55 @@ class BookingObserver
         app(OutlookGraphService::class)->deleteEvent($account, $booking->outlook_event_id);
     }
 
+    private function notifyCustomerIfKeyFieldsChanged(Booking $booking): void
+    {
+        if (!$booking->delegates_submitted || !$booking->customer) {
+            return;
+        }
+
+        $trackedFields = [
+            'start',
+            'end',
+            'training_location_line1',
+            'training_location_line2',
+            'training_location_line3',
+            'training_location_city',
+            'training_location_postcode',
+            'location_lkst_yard',
+            'course_id',
+        ];
+
+        $changed = array_intersect($trackedFields, array_keys($booking->getChanges()));
+
+        if (empty($changed)) {
+            return;
+        }
+
+        $labels = [
+            'start' => 'Start date/time',
+            'end' => 'End date/time',
+            'training_location_line1' => 'Location',
+            'training_location_line2' => 'Location',
+            'training_location_line3' => 'Location',
+            'training_location_city' => 'Location',
+            'training_location_postcode' => 'Location',
+            'location_lkst_yard' => 'Location',
+            'course_id' => 'Course',
+        ];
+
+        $changes = collect($changed)
+            ->map(fn($field) => $labels[$field] ?? $field)
+            ->unique()
+            ->values()
+            ->all();
+
+        $booking->load('course');
+        $additionalEmails = $booking->customer->emailRecipients->pluck('email')->all();
+        Mail::to($booking->customer->email)
+            ->cc($additionalEmails)
+            ->send(new BookingChangedMail($booking, $changes));
+    }
+
     private function getAccount(Booking $booking): ?ExternalCalendarAccount
     {
         if (!$booking->instructor_id) {
@@ -121,7 +173,15 @@ class BookingObserver
 
     private function buildPayload(Booking $booking): array
     {
-        $timezone = config('app.timezone', 'UTC');
+        $timezone = 'Europe/London';
+
+        $start = $booking->start instanceof Carbon
+            ? $booking->start
+            : Carbon::parse($booking->start);
+
+        $end = $booking->end instanceof Carbon
+            ? $booking->end
+            : Carbon::parse($booking->end);
 
         return [
             'subject' => $booking->course?->name ?? 'Booking',
@@ -130,15 +190,11 @@ class BookingObserver
                 'content' => $booking->notes ?? '',
             ],
             'start' => [
-                'dateTime' => $booking->start instanceof Carbon
-                    ? $booking->start->toIso8601String()
-                    : Carbon::parse($booking->start)->toIso8601String(),
+                'dateTime' => $start->format('Y-m-d\TH:i:s'),
                 'timeZone' => $timezone,
             ],
             'end' => [
-                'dateTime' => $booking->end instanceof Carbon
-                    ? $booking->end->toIso8601String()
-                    : Carbon::parse($booking->end)->toIso8601String(),
+                'dateTime' => $end->format('Y-m-d\TH:i:s'),
                 'timeZone' => $timezone,
             ],
             'location' => [
