@@ -65,6 +65,7 @@ class PublicBookingForm extends Page
             'first_name' => '',
             'last_name' => '',
             'email' => '',
+            'phone' => '',
         ]);
 
         $formData = [
@@ -92,7 +93,7 @@ class PublicBookingForm extends Page
             $num = $i + 1;
             $required = $i === 0;
             $delegateFields[] = \Filament\Schemas\Components\Section::make("Delegate {$num}")
-                ->columns(3)
+                ->columns(4)
                 ->schema([
                     TextInput::make("delegates.{$i}.first_name")
                         ->label('First Name')
@@ -107,6 +108,10 @@ class PublicBookingForm extends Page
                         ->email()
                         ->required($required)
                         ->rules($required ? [] : [ "required_with:data.delegates.{$i}.first_name,data.delegates.{$i}.last_name" ]),
+                    TextInput::make("delegates.{$i}.phone")
+                        ->label('Tel Number')
+                        ->tel()
+                        ->maxLength(255),
                 ]);
         }
 
@@ -228,8 +233,13 @@ class PublicBookingForm extends Page
                 $user->last_name = $delegateData['last_name'];
                 $user->email = $delegateData['email'];
                 $user->password = Hash::make(Str::random(16));
-                $user->save();
             }
+
+            if (!empty($delegateData['phone'])) {
+                $user->phone = $delegateData['phone'];
+            }
+
+            $user->save();
 
             if (!$user->hasRole('Learner')) {
                 $user->assignRole('Learner');

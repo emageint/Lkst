@@ -3,7 +3,7 @@
 
     $livewire ??= null;
     $renderHookScopes = $livewire?->getRenderHookScopes();
-    $maxContentWidth ??= (filament()->getSimplePageMaxContentWidth() ?? Width::FourExtraLarge);
+    $maxContentWidth ??= (filament()->getSimplePageMaxContentWidth() ?? Width::SixExtraLarge);
 
     if (is_string($maxContentWidth)) {
         $maxContentWidth = Width::tryFrom($maxContentWidth) ?? $maxContentWidth;
@@ -20,7 +20,7 @@
     <div class="fi-simple-layout">
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::SIMPLE_LAYOUT_START, scopes: $renderHookScopes) }}
 
-   
+
         <div class="fi-simple-main-ctn">
             <main
                 @class([
