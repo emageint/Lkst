@@ -11,6 +11,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class BookingsTable
@@ -22,7 +23,11 @@ class BookingsTable
             ->columns([
                 TextColumn::make('course.name')
                     ->label('Course Name')
-                    ->searchable()
+                    ->getStateUsing(fn ($record) => $record->booking_mode === 'misc'
+                        ? $record->title
+                        : $record->course?->name
+                    )
+                    ->searchable(['title'])
                     ->sortable(),
 
                 TextColumn::make('customer.full_name')
@@ -65,7 +70,12 @@ class BookingsTable
                     ->badge(),
             ])
             ->filters([
-                // Add filters here if needed
+                SelectFilter::make('booking_mode')
+                    ->label('Mode')
+                    ->options([
+                        'course' => 'Course Booking',
+                        'misc' => 'Miscellaneous',
+                    ]),
             ])
             ->recordActions([
                 Action::make('complete')

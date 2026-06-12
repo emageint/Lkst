@@ -7,6 +7,7 @@ use App\Models\CourseVariable;
 use App\Models\User;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -32,11 +33,34 @@ class BookingForm
                     ->columnSpanFull()
                     ->schema([
 
+                        Radio::make('booking_mode')
+                            ->hiddenLabel()
+                            ->options(['course' => 'Course Booking', 'misc' => 'Miscellaneous'])
+                            ->default('course')
+                            ->inline()
+                            ->live()
+                            ->disabledOn('edit')
+                            ->dehydrated()
+                            ->afterStateUpdated(function ($state, Set $set) {
+                                if ($state === 'misc') {
+                                    $set('course_id', null);
+                                    $set('course_variable_type', null);
+                                    $set('course_duration', null);
+                                    $set('max_delegates', null);
+                                    $set('customer_id', null);
+                                    $set('price', null);
+                                } else {
+                                    $set('title', null);
+                                    $set('description', null);
+                                }
+                            })
+                            ->columnSpanFull(),
+
                         Select::make('course_id')
                             ->label('Course Name')
                             ->options(Course::pluck('name', 'id'))
                             ->searchable()
-                            ->required()
+                            ->required(fn(Get $get) => $get('booking_mode') === 'course')
                             ->live()
                             ->afterStateUpdated(function ($state, Set $set) {
                                 $set('course_variable_type', null);
@@ -44,12 +68,14 @@ class BookingForm
                                 $set('max_delegates', null);
                                 $set('instructor_id', null);
                             })
+                            ->visible(fn(Get $get) => $get('booking_mode') === 'course')
                             ->columnSpan(1),
 
                         Toggle::make('location_lkst_yard')
                             ->label('Location: LKST Yard')
                             ->inline(false)
                             ->default(false)
+                            ->visible(fn(Get $get) => $get('booking_mode') === 'course')
                             ->columnSpan(1),
 
                         Section::make('')
@@ -63,7 +89,7 @@ class BookingForm
                                         : []
                                     )
                                     ->searchable()
-                                    ->required()
+                                    ->required(fn(Get $get) => $get('booking_mode') === 'course')
                                     ->preload()
                                     ->live()
                                     ->afterStateUpdated(function ($state, Set $set, Get $get) {
@@ -100,10 +126,19 @@ class BookingForm
                                     ->state(fn(Get $get) => filled($get('max_delegates')) ? (string)$get('max_delegates') : '—')
                                     ->columnSpan(1),
                             ])
+                            ->visible(fn(Get $get) => $get('booking_mode') === 'course')
                             ->columnSpanFull(),
 
                         Hidden::make('course_duration'),
                         Hidden::make('max_delegates'),
+
+                        TextInput::make('title')
+                            ->label('Title')
+                            ->maxLength(255)
+                            ->required(fn(Get $get) => $get('booking_mode') === 'misc')
+                            ->visible(fn(Get $get) => $get('booking_mode') === 'misc')
+                            ->columnSpanFull(),
+
                         DateTimePicker::make('start')
                             ->label('Start')
                             ->required()
@@ -114,11 +149,13 @@ class BookingForm
                             ->live()
                             ->afterStateUpdated(function ($state, Set $set, Get $get) {
                                 $set('instructor_id', null);
-                                $service = app(BookingScheduleService::class);
-                                $start = $service->normalizeStart($state);
-                                $end = $service->calculateEnd($start, (int)$get('course_duration'));
-                                if ($end) {
-                                    $set('end', $end->toDateTimeString());
+                                if (filled($get('course_duration'))) {
+                                    $service = app(BookingScheduleService::class);
+                                    $start = $service->normalizeStart($state);
+                                    $end = $service->calculateEnd($start, (int)$get('course_duration'));
+                                    if ($end) {
+                                        $set('end', $end->toDateTimeString());
+                                    }
                                 }
                             })
                             ->dehydrateStateUsing(fn($state) => $state
@@ -136,6 +173,7 @@ class BookingForm
                             ->dehydrateStateUsing(fn($state) => $state
                                 ? \Carbon\Carbon::parse($state)->toDateTimeString()
                                 : $state),
+
                         Select::make('customer_id')
                             ->label('Customer Name')
                             ->relationship(
@@ -172,7 +210,8 @@ class BookingForm
                             })
                             ->searchable([ 'first_name', 'last_name', 'email' ])
                             ->preload()
-                            ->required()
+                            ->required(fn(Get $get) => $get('booking_mode') === 'course')
+                            ->visible(fn(Get $get) => $get('booking_mode') === 'course')
                             ->columnSpan(1),
 
 
@@ -200,19 +239,27 @@ class BookingForm
                             ->searchable([ 'first_name', 'last_name', 'email' ])
                             ->preload()
                             ->live()
-                            ->disabled(fn(Get $get) => blank($get('course_id')))
+                            ->disabled(fn(Get $get) => $get('booking_mode') === 'course' && blank($get('course_id')))
                             ->columnSpan(1),
 
                         RichEditor::make('price')
                             ->label('Price + VAT')
-                            ->required()
+                            ->required(fn(Get $get) => $get('booking_mode') === 'course')
+                            ->visible(fn(Get $get) => $get('booking_mode') === 'course')
                             ->columnSpan(2),
                         TextInput::make('po_number')
                             ->label('PO Number')
                             ->maxLength(255)
+                            ->visible(fn(Get $get) => $get('booking_mode') === 'course')
                             ->columnSpan(1)
                             ->hiddenOn('create'),
-                    ])
+
+                        Textarea::make('description')
+                            ->label('Description')
+                            ->rows(4)
+                            ->visible(fn(Get $get) => $get('booking_mode') === 'misc')
+                            ->columnSpanFull(),
+                    ]),
             ]);
     }
 }

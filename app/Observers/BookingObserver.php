@@ -16,6 +16,11 @@ class BookingObserver
 {
     public function created(Booking $booking): void
     {
+        if ($booking->booking_mode === 'misc') {
+            $this->syncOutlookEvent($booking);
+            return;
+        }
+
         if ($booking->customer) {
             $expiresAt = app(BookingScheduleService::class)->addBusinessHours(Carbon::now(), 48);
             $booking->form_expires_at = $expiresAt;
@@ -38,7 +43,9 @@ class BookingObserver
             return;
         }
 
-        $this->notifyCustomerIfKeyFieldsChanged($booking);
+        if ($booking->booking_mode !== 'misc') {
+            $this->notifyCustomerIfKeyFieldsChanged($booking);
+        }
 
         $service = app(OutlookGraphService::class);
         $statusChanged = $booking->wasChanged('status');
@@ -171,6 +178,22 @@ class BookingObserver
             ->first();
     }
 
+    private function syncOutlookEvent(Booking $booking): void
+    {
+        $account = $this->getAccount($booking);
+        if (!$account || $booking->start === null || $booking->end === null) {
+            return;
+        }
+
+        $payload = $this->buildPayload($booking);
+        $response = app(OutlookGraphService::class)->createEvent($account, $payload);
+
+        if (!empty($response['id'])) {
+            $booking->outlook_event_id = $response['id'];
+            $booking->saveQuietly();
+        }
+    }
+
     private function buildPayload(Booking $booking): array
     {
         $timezone = 'Europe/London';
@@ -184,7 +207,9 @@ class BookingObserver
             : Carbon::parse($booking->end);
 
         return [
-            'subject' => $booking->course?->name ?? 'Booking',
+            'subject' => $booking->booking_mode === 'misc'
+                ? ($booking->title ?? 'Booking')
+                : ($booking->course?->name ?? 'Booking'),
             'body' => [
                 'contentType' => 'HTML',
                 'content' => $booking->notes ?? '',

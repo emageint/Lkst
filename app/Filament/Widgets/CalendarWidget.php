@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -30,6 +31,7 @@ use Illuminate\Support\Str;
 use Saade\FilamentFullCalendar\Actions;
 use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
 use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
+use App\Support\BookingMiscData;
 
 
 class CalendarWidget extends FullCalendarWidget
@@ -125,6 +127,7 @@ class CalendarWidget extends FullCalendarWidget
                 ->openUrlInNewTab(),
             Actions\CreateAction::make()
                 ->extraAttributes([ 'style' => 'display:none' ])
+                ->mutateDataUsing(fn (array $data) => BookingMiscData::forSave($data))
                 ->mountUsing(function (Schema $form, array $arguments): void {
                     $start = data_get($arguments, 'start');
                     if (!$start) {
@@ -136,6 +139,7 @@ class CalendarWidget extends FullCalendarWidget
                         : Carbon::parse($start);
 
                     $form->fill([
+                        'booking_mode' => 'course',
                         'start' => $start->setTime(8, 0),
                     ]);
                 })
@@ -150,6 +154,7 @@ class CalendarWidget extends FullCalendarWidget
     {
         return [
             Actions\EditAction::make()
+                ->mutateDataUsing(fn (array $data) => BookingMiscData::forSave($data))
                 ->visible(fn() => $this->canManageCalendar()),
             Actions\DeleteAction::make()
                 ->visible(fn() => $this->canManageCalendar()),
@@ -191,11 +196,35 @@ class CalendarWidget extends FullCalendarWidget
                 ->columns(2)
                 ->columnSpanFull()
                 ->schema([
+
+                    Radio::make('booking_mode')
+                        ->hiddenLabel()
+                        ->options(['course' => 'Course Booking', 'misc' => 'Miscellaneous'])
+                        ->default('course')
+                        ->inline()
+                        ->live()
+                        ->disabled(fn () => $this->record !== null)
+                        ->dehydrated()
+                        ->afterStateUpdated(function ($state, Set $set) {
+                            if ($state === 'misc') {
+                                $set('course_id', null);
+                                $set('course_variable_type', null);
+                                $set('course_duration', null);
+                                $set('max_delegates', null);
+                                $set('customer_id', null);
+                                $set('price', null);
+                            } else {
+                                $set('title', null);
+                                $set('description', null);
+                            }
+                        })
+                        ->columnSpanFull(),
+
                     Select::make('course_id')
                         ->label('Course Name')
                         ->options(Course::pluck('name', 'id'))
                         ->searchable()
-                        ->required()
+                        ->required(fn(Get $get) => $get('booking_mode') === 'course')
                         ->live()
                         ->afterStateUpdated(function ($state, Set $set) {
                             $set('course_variable_type', null);
@@ -203,12 +232,16 @@ class CalendarWidget extends FullCalendarWidget
                             $set('max_delegates', null);
                             $set('instructor_id', null);
                         })
+                        ->visible(fn(Get $get) => $get('booking_mode') === 'course')
                         ->columnSpan(1),
+
                     Toggle::make('location_lkst_yard')
                         ->label('Location: LKST Yard')
                         ->inline(false)
                         ->default(false)
+                        ->visible(fn(Get $get) => $get('booking_mode') === 'course')
                         ->columnSpan(1),
+
                     Section::make('')
                         ->columns(3)
                         ->schema([
@@ -220,7 +253,7 @@ class CalendarWidget extends FullCalendarWidget
                                     : []
                                 )
                                 ->searchable()
-                                ->required()
+                                ->required(fn(Get $get) => $get('booking_mode') === 'course')
                                 ->preload()
                                 ->live()
                                 ->afterStateUpdated(function ($state, Set $set, Get $get) {
@@ -254,9 +287,19 @@ class CalendarWidget extends FullCalendarWidget
                                 ->state(fn(Get $get) => filled($get('max_delegates')) ? (string)$get('max_delegates') : '—')
                                 ->columnSpan(1),
                         ])
+                        ->visible(fn(Get $get) => $get('booking_mode') === 'course')
                         ->columnSpanFull(),
+
                     Hidden::make('course_duration'),
                     Hidden::make('max_delegates'),
+
+                    TextInput::make('title')
+                        ->label('Title')
+                        ->maxLength(255)
+                        ->required(fn(Get $get) => $get('booking_mode') === 'misc')
+                        ->visible(fn(Get $get) => $get('booking_mode') === 'misc')
+                        ->columnSpanFull(),
+
                     DateTimePicker::make('start')
                         ->label('Start')
                         ->required()
@@ -266,19 +309,23 @@ class CalendarWidget extends FullCalendarWidget
                         ->live()
                         ->afterStateUpdated(function ($state, Set $set, Get $get) {
                             $set('instructor_id', null);
-                            $service = app(BookingScheduleService::class);
-                            $start = $service->normalizeStart($state);
-                            $end = $service->calculateEnd($start, (int)$get('course_duration'));
-                            if ($end) {
-                                $set('end', $end);
+                            if (filled($get('course_duration'))) {
+                                $service = app(BookingScheduleService::class);
+                                $start = $service->normalizeStart($state);
+                                $end = $service->calculateEnd($start, (int)$get('course_duration'));
+                                if ($end) {
+                                    $set('end', $end);
+                                }
                             }
                         }),
+
                     DateTimePicker::make('end')
                         ->label('End')
                         ->required()
                         ->native(false)
                         ->displayFormat('d/m/Y H:i')
                         ->seconds(false),
+
                     Select::make('customer_id')
                         ->label('Customer Name')
                         ->relationship(
@@ -314,8 +361,10 @@ class CalendarWidget extends FullCalendarWidget
                         })
                         ->searchable([ 'first_name', 'last_name', 'email' ])
                         ->preload()
-                        ->required()
+                        ->required(fn(Get $get) => $get('booking_mode') === 'course')
+                        ->visible(fn(Get $get) => $get('booking_mode') === 'course')
                         ->columnSpan(1),
+
                     Select::make('instructor_id')
                         ->label('Instructor')
                         ->relationship(
@@ -340,20 +389,27 @@ class CalendarWidget extends FullCalendarWidget
                         ->searchable([ 'first_name', 'last_name', 'email' ])
                         ->preload()
                         ->live()
-                        ->disabled(fn(Get $get) => blank($get('course_id')))
+                        ->disabled(fn(Get $get) => $get('booking_mode') === 'course' && blank($get('course_id')))
                         ->columnSpan(1),
 
                     RichEditor::make('price')
                         ->label('Price + VAT')
-                        ->required()
+                        ->required(fn(Get $get) => $get('booking_mode') === 'course')
+                        ->visible(fn(Get $get) => $get('booking_mode') === 'course')
                         ->columnSpan(2),
 
                     TextInput::make('po_number')
                         ->label('PO Number')
                         ->maxLength(255)
+                        ->visible(fn(Get $get) => $get('booking_mode') === 'course')
                         ->columnSpan(1)
                         ->hiddenOn('create'),
 
+                    Textarea::make('description')
+                        ->label('Description')
+                        ->rows(4)
+                        ->visible(fn(Get $get) => $get('booking_mode') === 'misc')
+                        ->columnSpanFull(),
                 ]),
         ];
     }

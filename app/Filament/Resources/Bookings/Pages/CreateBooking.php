@@ -3,15 +3,21 @@
 namespace App\Filament\Resources\Bookings\Pages;
 
 use App\Filament\Resources\Bookings\BookingResource;
+use App\Support\BookingMiscData;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateBooking extends CreateRecord
 {
     protected static string $resource = BookingResource::class;
 
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        return BookingMiscData::forSave($data);
+    }
+
     protected function getRedirectUrl(): string
     {
         return BookingResource::getUrl('index');
     }
 }
- 
+

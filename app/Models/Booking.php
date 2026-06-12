@@ -17,7 +17,10 @@ class Booking extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'booking_mode',
         'course_id',
+        'title',
+        'description',
         'customer_id',
         'instructor_id',
         'start',
