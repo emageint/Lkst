@@ -95,8 +95,9 @@ class DelegateResource extends Resource
                                 ->required(),
 
                             TextInput::make('phone')
-                                ->label('Tel Number')
-                                ->required(),
+                                ->label('Tel Number'),
+                            TextInput::make('registration_number')
+                                ->label('Reg Number'),
                         ]),
                 ])
                 ->columnSpan([ 'lg' => fn(?User $record) => $record === null ? 3 : 2 ]),

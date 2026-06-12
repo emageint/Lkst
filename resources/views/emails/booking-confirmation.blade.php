@@ -44,7 +44,7 @@ ME2 3UB
 **Delegates:**
 
 @foreach($booking->delegates as $delegate)
-- {{ $delegate->first_name }} {{ $delegate->last_name }} ({{ $delegate->email }}@if($delegate->phone), Tel: {{ $delegate->phone }}@endif)
+- {{ $delegate->first_name }} {{ $delegate->last_name }} ({{ $delegate->email }}@if($delegate->phone), Tel: {{ $delegate->phone }}@endif@if($delegate->registration_number), Reg: {{ $delegate->registration_number }}@endif)
 @endforeach
 
 @endif

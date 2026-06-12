@@ -66,6 +66,7 @@ class PublicBookingForm extends Page
             'last_name' => '',
             'email' => '',
             'phone' => '',
+            'registration_number' => '',
         ]);
 
         $formData = [
@@ -93,7 +94,7 @@ class PublicBookingForm extends Page
             $num = $i + 1;
             $required = $i === 0;
             $delegateFields[] = \Filament\Schemas\Components\Section::make("Delegate {$num}")
-                ->columns(4)
+                ->columns(5)
                 ->schema([
                     TextInput::make("delegates.{$i}.first_name")
                         ->label('First Name')
@@ -111,6 +112,9 @@ class PublicBookingForm extends Page
                     TextInput::make("delegates.{$i}.phone")
                         ->label('Tel Number')
                         ->tel()
+                        ->maxLength(255),
+                    TextInput::make("delegates.{$i}.registration_number")
+                        ->label('Reg Number')
                         ->maxLength(255),
                 ]);
         }
@@ -237,6 +241,10 @@ class PublicBookingForm extends Page
 
             if (!empty($delegateData['phone'])) {
                 $user->phone = $delegateData['phone'];
+            }
+
+            if (!empty($delegateData['registration_number'])) {
+                $user->registration_number = $delegateData['registration_number'];
             }
 
             $user->save();

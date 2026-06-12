@@ -38,6 +38,7 @@ class User extends Authenticatable implements HasName
         'city',
         'postcode',
         'phone',
+        'registration_number'
     ];
 
 
