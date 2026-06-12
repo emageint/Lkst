@@ -24,6 +24,14 @@ Kent,
 ME2 3UB
 
 @endif
+@if($booking->site_contact_name)
+**Site Contact Name:** {{ $booking->site_contact_name }}
+
+@endif
+@if($booking->site_contact_number)
+**Site Contact Number:** {{ $booking->site_contact_number }}
+
+@endif
 Please click the button below to update your booking details:
 
 @component('mail::button', ['url' => $url])

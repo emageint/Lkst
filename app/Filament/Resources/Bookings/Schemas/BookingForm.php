@@ -75,7 +75,20 @@ class BookingForm
                             ->label('Location: LKST Yard')
                             ->inline(false)
                             ->default(false)
+                            ->live()
                             ->visible(fn(Get $get) => $get('booking_mode') === 'course')
+                            ->columnSpan(1),
+
+                        TextInput::make('site_contact_name')
+                            ->label('Site Contact Name')
+                            ->maxLength(255)
+                            ->visible(fn(Get $get) => $get('booking_mode') === 'course' && $get('location_lkst_yard'))
+                            ->columnSpan(1),
+
+                        TextInput::make('site_contact_number')
+                            ->label('Site Contact Number')
+                            ->maxLength(255)
+                            ->visible(fn(Get $get) => $get('booking_mode') === 'course' && $get('location_lkst_yard'))
                             ->columnSpan(1),
 
                         Section::make('')

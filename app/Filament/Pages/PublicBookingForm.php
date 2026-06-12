@@ -74,6 +74,8 @@ class PublicBookingForm extends Page
         ];
 
         if (!$booking->location_lkst_yard) {
+            $formData['site_contact_name'] = $booking->site_contact_name ?? '';
+            $formData['site_contact_number'] = $booking->site_contact_number ?? '';
             $formData['training_location_line1'] = $booking->training_location_line1 ?? '';
             $formData['training_location_line2'] = $booking->training_location_line2 ?? '';
             $formData['training_location_line3'] = $booking->training_location_line3 ?? '';
@@ -122,6 +124,19 @@ class PublicBookingForm extends Page
 
         $locationFields = [];
         if (!$this->booking?->location_lkst_yard) {
+            $locationFields[] = Section::make('Site Contact')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('site_contact_name')
+                        ->label('Site Contact Name')
+                        ->required()
+                        ->maxLength(255),
+                    TextInput::make('site_contact_number')
+                        ->label('Site Contact Number')
+                        ->required()
+                        ->maxLength(255),
+                ]);
+
             $locationFields[] = Section::make('Training Location')
                 ->columns(2)
                 ->schema([
@@ -263,6 +278,8 @@ class PublicBookingForm extends Page
         ];
 
         if (!$this->booking->location_lkst_yard) {
+            $bookingUpdate['site_contact_name'] = $data['site_contact_name'] ?? null;
+            $bookingUpdate['site_contact_number'] = $data['site_contact_number'] ?? null;
             $bookingUpdate['training_location_line1'] = $data['training_location_line1'] ?? null;
             $bookingUpdate['training_location_line2'] = $data['training_location_line2'] ?? null;
             $bookingUpdate['training_location_line3'] = $data['training_location_line3'] ?? null;

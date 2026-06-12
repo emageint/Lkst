@@ -29,6 +29,14 @@ ME2 3UB
 **Location:** {{ $booking->training_location }}
 
 @endif
+@if($booking->site_contact_name)
+**Site Contact Name:** {{ $booking->site_contact_name }}
+
+@endif
+@if($booking->site_contact_number)
+**Site Contact Number:** {{ $booking->site_contact_number }}
+
+@endif
 @if($booking->price)
 **Price + VAT:** {!! strip_tags($booking->price) !!}
 

@@ -17,6 +17,12 @@
                     Kent,
                     ME2 3UB
                 </div>
+                @if($this->booking->site_contact_name)
+                    <div><strong>Site Contact Name:</strong> {{ $this->booking->site_contact_name }}</div>
+                @endif
+                @if($this->booking->site_contact_number)
+                    <div><strong>Site Contact Number:</strong> {{ $this->booking->site_contact_number }}</div>
+                @endif
             @endif
         </div>
     @endif

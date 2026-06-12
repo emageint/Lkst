@@ -38,6 +38,8 @@ class Booking extends Model
         'outlook_event_id',
         'delegates_submitted',
         'location_lkst_yard',
+        'site_contact_name',
+        'site_contact_number',
         'form_expires_at',
         'reminder_sent_at',
         'ref_number',
