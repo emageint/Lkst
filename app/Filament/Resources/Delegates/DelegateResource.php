@@ -139,6 +139,10 @@ class DelegateResource extends Resource
                     ->label('Tel Number')
                     ->sortable()
                     ->searchable(),
+                TextColumn::make('registration_number')
+                    ->label('Reg Number')
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('courses.name')
                     ->label('Courses')
                     ->sortable(),

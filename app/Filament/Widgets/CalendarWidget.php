@@ -85,7 +85,40 @@ class CalendarWidget extends FullCalendarWidget
             ->values()
             ->all();
 
-        return array_merge($bookings, $ukHolidays);
+        $holidays = Holiday::query()
+            ->with('user')
+            ->where('start_date', '<', $end)
+            ->where('end_date', '>=', $start)
+            ->when(
+                auth()->user()?->hasRole('Instructor'),
+                fn($query) => $query->where('user_id', auth()->id())
+            )
+            ->get()
+            ->map(function (Holiday $holiday) {
+                $color = '#7dd3fc';
+                $name = $holiday->user?->full_name ?? 'Instructor';
+
+                return [
+                    'id' => 'holiday_' . $holiday->id,
+                    'title' => '🌴 Holiday: ' . $name,
+                    'start' => $holiday->start_date?->toDateString(),
+                    'end' => $holiday->end_date?->copy()->addDay()->toDateString(),
+                    'allDay' => true,
+                    'backgroundColor' => $color,
+                    'borderColor' => $color,
+                    'textColor' => $this->getTextColorForBackground($color),
+                    'display' => 'block',
+                    'url' => '#',
+                    'extendedProps' => [
+                        'course' => 'Holiday',
+                        'location' => $holiday->note ?? '',
+                    ],
+                ];
+            })
+            ->values()
+            ->all();
+
+        return array_merge($bookings, $holidays, $ukHolidays);
     }
 
 
